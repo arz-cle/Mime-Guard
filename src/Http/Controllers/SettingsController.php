@@ -6,6 +6,7 @@ namespace Arzou\MimeGuard\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Inertia\Inertia;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Collection;
 use Statamic\Facades\YAML;
@@ -23,16 +24,15 @@ class SettingsController extends CpController
 
     public function index()
     {
-        $settings = $this->getSettings();
-        $containers = $this->getContainers();
-        $blueprints = $this->getBlueprints();
-
-        return view('mime-guard::cp.settings', [
+        return Inertia::render('mime-guard::Settings', [
             'title' => __('mime-guard::messages.settings_title'),
-            'settings' => $settings,
-            'containers' => $containers,
-            'blueprints' => $blueprints,
+            'settings' => $this->getSettings(),
+            'containers' => $this->getContainers(),
+            'blueprints' => $this->getBlueprints(),
             'commonMimeTypes' => $this->getCommonMimeTypes(),
+            'actionUrl' => cp_route('mime-guard.update'),
+            'createContainerUrl' => cp_route('asset-containers.create'),
+            'trans' => $this->getTranslations(),
         ]);
     }
 
@@ -64,6 +64,12 @@ class SettingsController extends CpController
         ];
 
         $this->saveSettings($settings);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('mime-guard::messages.settings_saved'),
+            ]);
+        }
 
         return redirect()
             ->route('statamic.cp.mime-guard.index')
@@ -167,6 +173,37 @@ class SettingsController extends CpController
         }
 
         return $rules;
+    }
+
+    protected function getTranslations(): array
+    {
+        return [
+            'global_restrictions' => __('mime-guard::messages.global_restrictions'),
+            'global_restrictions_help' => __('mime-guard::messages.global_restrictions_help'),
+            'toggle_all' => __('mime-guard::messages.toggle_all'),
+            'custom_mime_types' => __('mime-guard::messages.custom_mime_types'),
+            'custom_mime_types_help' => __('mime-guard::messages.custom_mime_types_help'),
+            'container_rules' => __('mime-guard::messages.container_rules'),
+            'container_rules_help' => __('mime-guard::messages.container_rules_help'),
+            'create_container' => __('mime-guard::messages.create_container'),
+            'configured' => __('mime-guard::messages.configured'),
+            'container_types_help' => __('mime-guard::messages.container_types_help'),
+            'no_containers' => __('mime-guard::messages.no_containers'),
+            'blueprint_rules' => __('mime-guard::messages.blueprint_rules'),
+            'blueprint_rules_help' => __('mime-guard::messages.blueprint_rules_help'),
+            'blueprint_types_help' => __('mime-guard::messages.blueprint_types_help'),
+            'no_blueprints' => __('mime-guard::messages.no_blueprints'),
+            'logging' => __('mime-guard::messages.logging'),
+            'logging_enabled' => __('mime-guard::messages.logging_enabled'),
+            'logging_help' => __('mime-guard::messages.logging_help'),
+            'save_settings' => __('mime-guard::messages.save_settings'),
+            'settings_saved' => __('mime-guard::messages.settings_saved'),
+            'help_title' => __('mime-guard::messages.help_title'),
+            'help_hierarchy' => __('mime-guard::messages.help_hierarchy'),
+            'help_hierarchy_desc' => __('mime-guard::messages.help_hierarchy_desc'),
+            'help_wildcards' => __('mime-guard::messages.help_wildcards'),
+            'help_wildcards_desc' => __('mime-guard::messages.help_wildcards_desc'),
+        ];
     }
 
     protected function getCommonMimeTypes(): array

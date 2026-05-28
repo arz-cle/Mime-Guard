@@ -25,7 +25,11 @@ class ServiceProvider extends AddonServiceProvider
     ];
 
     protected $scripts = [
-        __DIR__.'/../resources/js/cp.js',
+        __DIR__.'/../resources/dist/cp.js',
+    ];
+
+    protected $stylesheets = [
+        __DIR__.'/../resources/dist/mime-guard.css',
     ];
 
     protected $viewNamespace = 'mime-guard';

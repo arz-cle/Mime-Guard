@@ -3,6 +3,133 @@
 @section('title', $title)
 
 @section('content')
+    <style>
+        /* ===== Pill Toggles ===== */
+        .mime-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            line-height: 1.25rem;
+            transition: all 0.15s ease;
+            user-select: none;
+            background: rgb(249 250 251);
+            border-color: rgb(229 231 235);
+            color: rgb(156 163 175);
+        }
+        .mime-pill:hover {
+            border-color: rgb(209 213 219);
+            color: rgb(107 114 128);
+        }
+        .mime-pill::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid currentColor;
+            opacity: 0.4;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .mime-pill:has(input:checked)::before {
+            background: currentColor;
+            opacity: 1;
+        }
+        .mime-pill.pill-wildcard {
+            border-style: dashed;
+            font-weight: 500;
+        }
+
+        /* Block pills (red when active) */
+        .mime-pill.pill-block:has(input:checked) {
+            background: rgb(254 242 242);
+            border-color: rgb(252 165 165);
+            color: rgb(185 28 28);
+        }
+        .mime-pill.pill-block:has(input:checked):hover {
+            background: rgb(254 226 226);
+        }
+
+        /* Allow pills (blue when active) */
+        .mime-pill.pill-allow:has(input:checked) {
+            background: rgb(239 246 255);
+            border-color: rgb(147 197 253);
+            color: rgb(29 78 216);
+        }
+        .mime-pill.pill-allow:has(input:checked):hover {
+            background: rgb(219 234 254);
+        }
+
+        /* Dark mode */
+        .dark .mime-pill {
+            background: rgba(255 255 255 / 0.03);
+            border-color: rgb(55 65 81);
+            color: rgb(107 114 128);
+        }
+        .dark .mime-pill:hover {
+            border-color: rgb(75 85 99);
+            color: rgb(156 163 175);
+        }
+        .dark .mime-pill.pill-block:has(input:checked) {
+            background: rgba(239 68 68 / 0.1);
+            border-color: rgba(239 68 68 / 0.3);
+            color: rgb(248 113 113);
+        }
+        .dark .mime-pill.pill-block:has(input:checked):hover {
+            background: rgba(239 68 68 / 0.15);
+        }
+        .dark .mime-pill.pill-allow:has(input:checked) {
+            background: rgba(59 130 246 / 0.1);
+            border-color: rgba(59 130 246 / 0.3);
+            color: rgb(96 165 250);
+        }
+        .dark .mime-pill.pill-allow:has(input:checked):hover {
+            background: rgba(59 130 246 / 0.15);
+        }
+
+        /* ===== Toggle Switch ===== */
+        .toggle-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .toggle-track {
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            background: rgb(209 213 219);
+            position: relative;
+            transition: background 0.2s ease;
+            flex-shrink: 0;
+        }
+        .toggle-switch input:checked + .toggle-track {
+            background: rgb(34 197 94);
+        }
+        .toggle-track::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .toggle-switch input:checked + .toggle-track::after {
+            transform: translateX(20px);
+        }
+        .dark .toggle-track {
+            background: rgb(75 85 99);
+        }
+    </style>
+
     <header class="flex flex-wrap items-center justify-between gap-4 px-2 sm:px-0 py-6 max-md:pb-8 md:py-8">
         <h1 class="text-[25px] leading-[1.25] st-text-legibility font-medium antialiased flex items-center gap-2.5 md:flex-1">
             <div class="size-5 relative">
@@ -28,52 +155,49 @@
         <div class="bg-gray-100 dark:bg-gray-950/35 rounded-2xl p-1.5 mb-6">
             <div class="bg-white dark:bg-gray-850 rounded-xl ring ring-gray-200 dark:ring-gray-700/80 shadow-sm px-4 py-5">
                 <header class="mb-6">
-                    <h2 class="font-bold text-lg text-gray-925 dark:text-gray-300">{{ __('mime-guard::messages.global_restrictions') }}</h2>
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-lg text-gray-925 dark:text-gray-300">{{ __('mime-guard::messages.global_restrictions') }}</h2>
+                        <button type="button" id="toggle-all-mime" class="text-sm cursor-pointer bg-linear-to-b from-white to-gray-50 dark:from-gray-850 dark:to-gray-900 border border-gray-300 dark:border-gray-700/80 shadow-sm px-3 py-1.5 rounded-lg transition-colors hover:to-gray-100 dark:hover:to-gray-850 text-gray-900 dark:text-gray-300">
+                            {{ __('mime-guard::messages.toggle_all') }}
+                        </button>
+                    </div>
                     <p class="text-sm text-gray-600/90 dark:text-gray-400 mt-1">{{ __('mime-guard::messages.global_restrictions_help') }}</p>
                 </header>
 
-                <div class="mb-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <label class="text-sm font-medium text-gray-925 dark:text-gray-300 block">{{ __('mime-guard::messages.restricted_mime_types') }}</label>
-                            <p class="text-sm text-gray-600/90 dark:text-gray-400 mt-0.5">{{ __('mime-guard::messages.check_to_block') }}</p>
-                        </div>
-                        <label class="flex items-center gap-2 text-sm cursor-pointer bg-linear-to-b from-white to-gray-50 dark:from-gray-850 dark:to-gray-900 border border-gray-300 dark:border-gray-700/80 shadow-sm px-3 py-1.5 rounded-lg transition-colors hover:to-gray-100 dark:hover:to-gray-850">
-                            <input type="checkbox" id="toggle-all-mime" class="form-checkbox">
-                            <span class="text-gray-900 dark:text-gray-300">{{ __('mime-guard::messages.toggle_all') }}</span>
-                        </label>
-                    </div>
-
-                    <div id="mime-checkboxes" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-                        @foreach($commonMimeTypes as $category => $types)
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900 mime-category-card">
-                                <button type="button" class="category-toggle font-medium text-sm text-gray-925 dark:text-gray-300 block mb-3 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
+                <div id="mime-checkboxes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    @foreach($commonMimeTypes as $category => $types)
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900 mime-category-card">
+                            <div class="flex items-center justify-between mb-3">
+                                <button type="button" class="category-toggle font-medium text-sm text-gray-925 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
+                                <span class="category-count text-xs text-gray-400 dark:text-gray-500 tabular-nums"></span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
                                 @foreach($types as $mime => $label)
-                                    <label class="flex items-center gap-2 text-sm py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 -mx-2 rounded-lg transition-colors">
+                                    <label class="mime-pill pill-block {{ str_ends_with($mime, '/*') ? 'pill-wildcard' : '' }}">
                                         <input
                                             type="checkbox"
                                             name="restricted_by_default[]"
                                             value="{{ $mime }}"
                                             {{ in_array($mime, $settings['restricted_by_default'] ?? []) ? 'checked' : '' }}
-                                            class="form-checkbox"
+                                            class="sr-only"
                                         >
-                                        <span class="text-gray-700 dark:text-gray-400" title="{{ $mime }}">{{ $label }}</span>
+                                        <span>{{ $label }}</span>
                                     </label>
                                 @endforeach
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
+                </div>
 
-                    <div class="mt-6">
-                        <label class="text-sm font-medium text-gray-925 dark:text-gray-300 mb-1.5 block">{{ __('mime-guard::messages.custom_mime_types') }}</label>
-                        <p class="text-sm text-gray-600/90 dark:text-gray-400 mb-2">{{ __('mime-guard::messages.custom_mime_types_help') }}</p>
-                        <textarea
-                            name="restricted_by_default_custom"
-                            class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-925 dark:text-gray-300 placeholder:text-gray-500 dark:placeholder:text-gray-400/85 shadow-sm rounded-lg px-3 py-2 font-mono text-sm"
-                            rows="3"
-                            placeholder="application/x-custom&#10;text/csv"
-                        >{{ implode("\n", array_diff($settings['restricted_by_default'] ?? [], array_keys(array_merge(...array_values($commonMimeTypes))))) }}</textarea>
-                    </div>
+                <div class="mt-6">
+                    <label class="text-sm font-medium text-gray-925 dark:text-gray-300 mb-1.5 block">{{ __('mime-guard::messages.custom_mime_types') }}</label>
+                    <p class="text-sm text-gray-600/90 dark:text-gray-400 mb-2">{{ __('mime-guard::messages.custom_mime_types_help') }}</p>
+                    <textarea
+                        name="restricted_by_default_custom"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-925 dark:text-gray-300 placeholder:text-gray-500 dark:placeholder:text-gray-400/85 shadow-sm rounded-lg px-3 py-2 font-mono text-sm"
+                        rows="3"
+                        placeholder="application/x-custom&#10;text/csv"
+                    >{{ implode("\n", array_diff($settings['restricted_by_default'] ?? [], array_keys(array_merge(...array_values($commonMimeTypes))))) }}</textarea>
                 </div>
             </div>
         </div>
@@ -116,22 +240,27 @@
                                 <div class="collapsible-content hidden px-4 pb-4">
                                     <p class="text-sm text-gray-600/90 dark:text-gray-400 mb-3">{{ __('mime-guard::messages.container_types_help') }}</p>
 
-                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                                         @foreach($commonMimeTypes as $category => $types)
                                             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 mime-category-card">
-                                                <button type="button" class="category-toggle font-medium text-xs text-gray-700 dark:text-gray-400 block mb-2 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
-                                                @foreach($types as $mime => $label)
-                                                    <label class="flex items-center gap-2 text-xs py-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 px-1 -mx-1 rounded transition-colors">
-                                                        <input
-                                                            type="checkbox"
-                                                            name="containers[{{ $container['handle'] }}][allow][]"
-                                                            value="{{ $mime }}"
-                                                            {{ in_array($mime, $containerRules['allow'] ?? []) ? 'checked' : '' }}
-                                                            class="form-checkbox"
-                                                        >
-                                                        <span class="text-gray-600 dark:text-gray-400" title="{{ $mime }}">{{ $label }}</span>
-                                                    </label>
-                                                @endforeach
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <button type="button" class="category-toggle font-medium text-xs text-gray-700 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
+                                                    <span class="category-count text-xs text-gray-400 dark:text-gray-500 tabular-nums"></span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach($types as $mime => $label)
+                                                        <label class="mime-pill pill-allow {{ str_ends_with($mime, '/*') ? 'pill-wildcard' : '' }}">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="containers[{{ $container['handle'] }}][allow][]"
+                                                                value="{{ $mime }}"
+                                                                {{ in_array($mime, $containerRules['allow'] ?? []) ? 'checked' : '' }}
+                                                                class="sr-only"
+                                                            >
+                                                            <span title="{{ $mime }}">{{ $label }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -187,22 +316,27 @@
                                 <div class="collapsible-content hidden px-4 pb-4">
                                     <p class="text-sm text-gray-600/90 dark:text-gray-400 mb-3">{{ __('mime-guard::messages.blueprint_types_help') }}</p>
 
-                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                                         @foreach($commonMimeTypes as $category => $types)
                                             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 mime-category-card">
-                                                <button type="button" class="category-toggle font-medium text-xs text-gray-700 dark:text-gray-400 block mb-2 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
-                                                @foreach($types as $mime => $label)
-                                                    <label class="flex items-center gap-2 text-xs py-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 px-1 -mx-1 rounded transition-colors">
-                                                        <input
-                                                            type="checkbox"
-                                                            name="blueprints[{{ $blueprint['handle'] }}][allow][]"
-                                                            value="{{ $mime }}"
-                                                            {{ in_array($mime, $blueprintRules['allow'] ?? []) ? 'checked' : '' }}
-                                                            class="form-checkbox"
-                                                        >
-                                                        <span class="text-gray-600 dark:text-gray-400" title="{{ $mime }}">{{ $label }}</span>
-                                                    </label>
-                                                @endforeach
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <button type="button" class="category-toggle font-medium text-xs text-gray-700 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">{{ $category }}</button>
+                                                    <span class="category-count text-xs text-gray-400 dark:text-gray-500 tabular-nums"></span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach($types as $mime => $label)
+                                                        <label class="mime-pill pill-allow {{ str_ends_with($mime, '/*') ? 'pill-wildcard' : '' }}">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="blueprints[{{ $blueprint['handle'] }}][allow][]"
+                                                                value="{{ $mime }}"
+                                                                {{ in_array($mime, $blueprintRules['allow'] ?? []) ? 'checked' : '' }}
+                                                                class="sr-only"
+                                                            >
+                                                            <span title="{{ $mime }}">{{ $label }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -233,17 +367,18 @@
                     <h2 class="font-bold text-lg text-gray-925 dark:text-gray-300">{{ __('mime-guard::messages.logging') }}</h2>
                 </header>
 
-                <label class="flex items-center gap-3 cursor-pointer">
+                <label class="toggle-switch flex items-center gap-3">
                     <input
                         type="checkbox"
                         name="logging_enabled"
                         value="1"
                         {{ ($settings['logging']['enabled'] ?? true) ? 'checked' : '' }}
-                        class="form-checkbox"
+                        class="sr-only"
                     >
+                    <span class="toggle-track"></span>
                     <span class="text-gray-925 dark:text-gray-300">{{ __('mime-guard::messages.logging_enabled') }}</span>
                 </label>
-                <p class="text-sm text-gray-600/90 dark:text-gray-400 mt-2 ml-7">{{ __('mime-guard::messages.logging_help') }}</p>
+                <p class="text-sm text-gray-600/90 dark:text-gray-400 mt-2 ml-12">{{ __('mime-guard::messages.logging_help') }}</p>
             </div>
         </div>
 
@@ -274,94 +409,67 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Toggle all checkboxes (global restrictions)
-            const toggleAll = document.getElementById('toggle-all-mime');
             const checkboxContainer = document.getElementById('mime-checkboxes');
-            const checkboxes = checkboxContainer.querySelectorAll('input[type="checkbox"]');
 
-            function updateToggleAllState() {
-                const checkedCount = checkboxContainer.querySelectorAll('input[type="checkbox"]:checked').length;
-                toggleAll.checked = checkedCount === checkboxes.length;
-                toggleAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
-            }
-
-            toggleAll.addEventListener('change', function() {
-                checkboxes.forEach(cb => cb.checked = this.checked);
+            // Toggle all button
+            document.getElementById('toggle-all-mime').addEventListener('click', function() {
+                const checkboxes = checkboxContainer.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                checkboxes.forEach(cb => cb.checked = !allChecked);
+                updateAllCategoryCounts();
             });
 
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', updateToggleAllState);
-            });
-
-            updateToggleAllState();
-
-            // Category title toggle (click on category name to toggle all in that category)
-            document.querySelectorAll('.category-toggle').forEach(categoryTitle => {
-                categoryTitle.addEventListener('click', function(e) {
+            // Category title toggle
+            document.querySelectorAll('.category-toggle').forEach(btn => {
+                btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     const card = this.closest('.mime-category-card');
                     if (!card) return;
 
-                    const categoryCheckboxes = card.querySelectorAll('input[type="checkbox"]');
-                    const allChecked = Array.from(categoryCheckboxes).every(cb => cb.checked);
-
-                    categoryCheckboxes.forEach(cb => {
-                        cb.checked = !allChecked;
-                    });
-
-                    // Update global toggle state if in global restrictions
-                    if (checkboxContainer.contains(this)) {
-                        updateToggleAllState();
-                    }
+                    const cbs = card.querySelectorAll('input[type="checkbox"]');
+                    const allChecked = Array.from(cbs).every(cb => cb.checked);
+                    cbs.forEach(cb => cb.checked = !allChecked);
+                    updateCategoryCount(card);
                 });
             });
 
-            // Wildcard toggle (e.g., image/*, video/* toggles all in category)
-            document.querySelectorAll('input[type="checkbox"][value$="/*"]').forEach(wildcardCheckbox => {
-                wildcardCheckbox.addEventListener('change', function() {
+            // Wildcard checkbox toggles all in category
+            document.querySelectorAll('input[type="checkbox"][value$="/*"]').forEach(wc => {
+                wc.addEventListener('change', function() {
                     const card = this.closest('.mime-category-card');
                     if (!card) return;
-
-                    const categoryCheckboxes = card.querySelectorAll('input[type="checkbox"]');
-                    categoryCheckboxes.forEach(cb => {
-                        if (cb !== this) {
-                            cb.checked = this.checked;
-                        }
+                    card.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (cb !== this) cb.checked = this.checked;
                     });
-
-                    // Update global toggle state if in global restrictions
-                    if (checkboxContainer.contains(this)) {
-                        updateToggleAllState();
-                    }
+                    updateCategoryCount(card);
                 });
             });
 
-            // Update wildcard checkbox when all individual types are checked
-            function updateWildcardState(card) {
-                const wildcardCheckbox = card.querySelector('input[type="checkbox"][value$="/*"]');
-                if (!wildcardCheckbox) return;
+            // Auto-check wildcard when all individual types are checked
+            document.querySelectorAll('.mime-category-card input[type="checkbox"]:not([value$="/*"])').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const card = this.closest('.mime-category-card');
+                    if (!card) return;
+                    const wc = card.querySelector('input[type="checkbox"][value$="/*"]');
+                    if (!wc) return;
+                    const others = Array.from(card.querySelectorAll('input[type="checkbox"]')).filter(c => c !== wc);
+                    wc.checked = others.every(c => c.checked);
+                    updateCategoryCount(card);
+                });
+            });
 
-                const otherCheckboxes = Array.from(card.querySelectorAll('input[type="checkbox"]'))
-                    .filter(cb => cb !== wildcardCheckbox);
-
-                const allChecked = otherCheckboxes.every(cb => cb.checked);
-                wildcardCheckbox.checked = allChecked;
+            // Category count display
+            function updateCategoryCount(card) {
+                const el = card.querySelector('.category-count');
+                if (!el) return;
+                const total = card.querySelectorAll('input[type="checkbox"]').length;
+                const checked = card.querySelectorAll('input[type="checkbox"]:checked').length;
+                el.textContent = checked + '/' + total;
             }
 
-            // Listen for changes on non-wildcard checkboxes
-            document.querySelectorAll('.mime-category-card input[type="checkbox"]:not([value$="/*"])').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const card = this.closest('.mime-category-card');
-                    if (card) {
-                        updateWildcardState(card);
-                    }
-                });
-            });
-
-            // Initialize wildcard states on page load
-            document.querySelectorAll('.mime-category-card').forEach(card => {
-                updateWildcardState(card);
-            });
+            function updateAllCategoryCounts() {
+                document.querySelectorAll('.mime-category-card').forEach(updateCategoryCount);
+            }
 
             // Collapsible cards
             document.querySelectorAll('.collapsible-card').forEach(card => {
@@ -385,6 +493,9 @@
                     }
                 });
             });
+
+            // Initialize
+            updateAllCategoryCounts();
         });
     </script>
 @endsection
