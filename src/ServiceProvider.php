@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Arzou\MimeGuard;
 
 use Arzou\MimeGuard\Listeners\AssetSavingListener;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Statamic\Events\AssetSaving;
 use Statamic\Facades\CP\Nav;
@@ -15,6 +14,12 @@ use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {
+    protected $listen = [
+        AssetSaving::class => [
+            AssetSavingListener::class,
+        ],
+    ];
+
     protected $routes = [
         'cp' => __DIR__.'/../routes/cp.php',
     ];
@@ -29,7 +34,6 @@ class ServiceProvider extends AddonServiceProvider
     {
         $this->registerConfig();
         $this->registerTranslations();
-        $this->registerListeners();
         $this->registerNavigation();
         $this->registerPermissions();
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'mime-guard');
@@ -80,14 +84,6 @@ class ServiceProvider extends AddonServiceProvider
         ], 'mime-guard-lang');
     }
 
-    protected function registerListeners(): void
-    {
-        Event::listen(
-            AssetSaving::class,
-            AssetSavingListener::class
-        );
-    }
-
     protected function registerNavigation(): void
     {
         Nav::extend(function ($nav) {
@@ -100,7 +96,9 @@ class ServiceProvider extends AddonServiceProvider
 
     protected function registerPermissions(): void
     {
-        Permission::register('configure mime-guard')
-            ->label(__('mime-guard::messages.permission_configure'));
+        Permission::extend(function () {
+            Permission::register('configure mime-guard')
+                ->label(__('mime-guard::messages.permission_configure'));
+        });
     }
 }
