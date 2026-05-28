@@ -123,7 +123,8 @@ class SettingsController extends CpController
             $collection->entryBlueprints()->each(function ($blueprint) use ($collection, &$blueprints) {
                 $blueprints[] = [
                     'handle' => $collection->handle().'::'.$blueprint->handle(),
-                    'title' => $collection->title().' → '.$blueprint->title(),
+                    'title' => $blueprint->title(),
+                    'collection' => $collection->title(),
                 ];
             });
         });
@@ -210,7 +211,6 @@ class SettingsController extends CpController
     {
         return [
             'Images' => [
-                'image/*' => 'All images',
                 'image/jpeg' => 'JPEG',
                 'image/png' => 'PNG',
                 'image/gif' => 'GIF',
@@ -218,27 +218,23 @@ class SettingsController extends CpController
                 'image/svg+xml' => 'SVG',
             ],
             'Documents' => [
-                'document/*' => 'All documents',
                 'application/pdf' => 'PDF',
                 'application/msword' => 'Word (DOC)',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'Word (DOCX)',
             ],
             'Archives' => [
-                'archive/*' => 'All archives',
                 'application/zip' => 'ZIP',
                 'application/x-rar-compressed' => 'RAR',
                 'application/x-7z-compressed' => '7Z',
                 'application/octet-stream' => 'Binary (generic)',
             ],
             '3D Models' => [
-                'model/*' => 'All 3D models',
                 'model/stl' => 'STL',
                 'application/sla' => 'STL (alt)',
                 'model/gltf+json' => 'GLTF',
                 'model/gltf-binary' => 'GLB',
             ],
             'Videos' => [
-                'video/*' => 'All videos',
                 'video/mp4' => 'MP4',
                 'video/webm' => 'WebM',
                 'video/quicktime' => 'MOV',

@@ -28,10 +28,6 @@ class ServiceProvider extends AddonServiceProvider
         __DIR__.'/../resources/dist/cp.js',
     ];
 
-    protected $stylesheets = [
-        __DIR__.'/../resources/dist/mime-guard.css',
-    ];
-
     protected $viewNamespace = 'mime-guard';
 
     public function bootAddon(): void
