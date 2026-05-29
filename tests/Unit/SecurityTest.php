@@ -43,7 +43,7 @@ describe('MIME detection uses magic bytes, not file extensions', function () {
     it('detects a ZIP signature from file content', function () {
         $validator = new MimeValidator;
         // PK signature with enough data — finfo may return zip or octet-stream
-        $path = createTempFile(hex2bin('504B0304140000000000') . str_repeat("\0", 100), 'fake.jpg');
+        $path = createTempFile(hex2bin('504B0304140000000000').str_repeat("\0", 100), 'fake.jpg');
 
         $mime = $validator->getMimeTypeFromContent($path);
         expect(in_array($mime, ['application/zip', 'application/octet-stream']))->toBeTrue();

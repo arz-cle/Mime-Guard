@@ -1,27 +1,28 @@
 # MIME Guard
 
-[![Tests](https://img.shields.io/github/actions/workflow/status/arz-cle/mime-guard/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/arz-cle/mime-guard/actions)
-[![Latest Version](https://img.shields.io/packagist/v/arz-cle/mime-guard.svg?style=flat-square)](https://packagist.org/packages/arz-cle/mime-guard)
-[![License](https://img.shields.io/github/license/arz-cle/mime-guard?style=flat-square)](LICENSE)
-[![Statamic 5+](https://img.shields.io/badge/Statamic-5.x_|_6.x-FF269E?style=flat-square)](https://statamic.com)
-[![PHP 8.2+](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square)](https://php.net)
+**Stop trusting file extensions. Validate what's actually inside.**
 
-A Statamic addon for granular MIME type management. Protect your assets by controlling which file types can be uploaded, with rules at global, container, and blueprint levels.
+[![Statamic 6.x](https://img.shields.io/badge/Statamic-6.x-FF269E?style=flat-square)](https://statamic.com)
+[![PHP 8.2+](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square)](https://php.net)
+[![License MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/arz-cle/mime-guard/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/arz-cle/mime-guard/actions)
+
+---
+
+## The problem
+
+A `.jpg` file can contain PHP code. A `.png` can be a ZIP archive. File extensions are trivial to fake, and Statamic doesn't inspect file contents by default. One malicious upload is all it takes.
+
+MIME Guard reads the actual file bytes to determine what a file really is, then enforces your rules.
 
 ## Features
 
-- **Server-side validation** using magic bytes (not just file extensions)
-- **Hierarchical rules**: Global → Container → Blueprint
-- **Wildcard support**: `image/*`, `video/*`, etc.
-- **Control Panel interface** for easy configuration
-- **Logging** of rejected upload attempts
-- **Multilingual**: English and French translations included
-
-## Requirements
-
-- Statamic 5.x or 6.x
-- PHP 8.2+
-- Laravel 11.x
+- **Real MIME detection** -- uses magic bytes (`finfo`), not file extensions
+- **Hierarchical rules** -- Global > Container > Blueprint, most specific wins
+- **Wildcards** -- `image/*`, `video/*`, `document/*`, `archive/*`
+- **Native CP interface** -- tabs, toggle switches, built with Statamic 6 components
+- **Blocked upload logging** -- MIME type, filename, user, and container
+- **Secure defaults** -- SVG, PDF, archives, and binaries blocked out of the box
 
 ## Installation
 
@@ -29,63 +30,54 @@ A Statamic addon for granular MIME type management. Protect your assets by contr
 composer require arz-cle/mime-guard
 ```
 
-The addon will be automatically discovered by Statamic.
-
-### Publish Configuration (Optional)
+Optionally publish the config file:
 
 ```bash
 php artisan vendor:publish --tag=mime-guard-config
 ```
 
-## Configuration
+## Quick start
 
-### Using the Control Panel
+### Via the Control Panel
 
-Navigate to **CP → Tools → MIME Guard** to configure:
+Navigate to **Tools > MIME Guard**. Four tabs let you configure everything visually:
 
-1. **Global Restrictions**: Select MIME types to block across all uploads
-2. **Container Rules**: Define allow/deny rules per asset container
-3. **Blueprint Rules**: Define allow/deny rules per collection blueprint
-4. **Logging**: Enable/disable logging of rejected uploads
+| Tab | Purpose |
+|-----|---------|
+| **Global** | Block MIME types across all uploads |
+| **Containers** | Override rules per asset container |
+| **Blueprints** | Override rules per collection blueprint |
+| **Help** | Rule hierarchy and wildcard reference |
 
-Settings are saved to `storage/statamic/addons/mime-guard/settings.yaml`.
-
-### Using Configuration File
-
-You can also configure MIME Guard via `config/mime-guard.php`:
+### Via config file
 
 ```php
+// config/mime-guard.php
+
 return [
-    // MIME types blocked by default across all uploads
     'restricted_by_default' => [
         'application/octet-stream',
         'application/zip',
-        'application/x-rar-compressed',
         'image/svg+xml',
         'application/pdf',
     ],
 
-    // Rules per asset container
     'containers' => [
         'documents' => [
             'allow' => ['application/pdf'],
-            'deny' => [],
         ],
-        'images' => [
+        'gallery' => [
             'allow' => ['image/*'],
-            'deny' => ['image/svg+xml'],
+            'deny'  => ['image/svg+xml'],
         ],
     ],
 
-    // Rules per blueprint (format: collection::blueprint)
     'blueprints' => [
-        'products::product' => [
-            'allow' => ['model/stl', 'application/octet-stream'],
-            'deny' => [],
+        'products::3d_viewer' => [
+            'allow' => ['model/stl', 'model/gltf-binary'],
         ],
     ],
 
-    // Logging configuration
     'logging' => [
         'enabled' => true,
         'channel' => 'stack',
@@ -93,177 +85,55 @@ return [
 ];
 ```
 
-## How It Works
+## How rules work
 
-### Rule Hierarchy
+Rules cascade from general to specific. Each level can `allow`, `deny`, or `inherit: false` to start fresh.
 
-Rules are evaluated in order of specificity:
+```
+Global          Blocks SVG, PDF, ZIP everywhere
+  Container     Allows PDF in "documents" container
+    Blueprint   Allows STL in "products::3d_viewer" blueprint
+```
 
-1. **Global** (`restricted_by_default`) - Blocks MIME types everywhere
-2. **Container** - Overrides global rules for a specific asset container
-3. **Blueprint** - Overrides container rules for a specific blueprint
-
-More specific rules always win. An `allow` rule at the container level will permit a globally restricted type.
+A type allowed at a more specific level overrides a global block. A type denied at a more specific level overrides a parent allow.
 
 ### Wildcards
 
-Use wildcards to match categories of MIME types:
-
 | Pattern | Matches |
 |---------|---------|
-| `image/*` | All image types (jpeg, png, gif, webp, etc.) |
-| `video/*` | All video types (mp4, webm, quicktime, etc.) |
-| `audio/*` | All audio types (mp3, wav, ogg, etc.) |
-| `application/*` | All application types |
+| `image/*` | JPEG, PNG, GIF, WebP, SVG, etc. |
+| `video/*` | MP4, WebM, QuickTime, etc. |
+| `document/*` | PDF, Word, Excel, PowerPoint, TXT, RTF |
+| `archive/*` | ZIP, RAR, 7Z, TAR, GZIP |
 
-### Server-Side Validation
+## Screenshots
 
-MIME Guard validates files using PHP's `finfo` extension, which reads the file's magic bytes. This means:
+> Screenshots coming soon.
 
-- A `.jpg` file containing PHP code will be detected as `text/x-php`
-- A renamed `.exe` file will be detected as `application/x-dosexec`
-- File extensions can't be used to bypass security
+<!--
+![Global restrictions](screenshots/global.png)
+![Container rules](screenshots/containers.png)
+![Blueprint rules](screenshots/blueprints.png)
+-->
 
-## Examples
-
-### Allow PDFs only in a specific container
-
-```php
-'containers' => [
-    'documents' => [
-        'allow' => ['application/pdf'],
-    ],
-],
-```
-
-### Block SVG files globally (XSS risk)
-
-```php
-'restricted_by_default' => [
-    'image/svg+xml',
-],
-```
-
-### Allow 3D models for a product blueprint
-
-```php
-'blueprints' => [
-    'products::product' => [
-        'allow' => [
-            'model/stl',
-            'model/gltf+json',
-            'model/gltf-binary',
-            'application/octet-stream', // STL files are often detected as this
-        ],
-    ],
-],
-```
-
-### Allow all images except SVG
-
-```php
-'containers' => [
-    'gallery' => [
-        'allow' => ['image/*'],
-        'deny' => ['image/svg+xml'],
-    ],
-],
-```
-
-## Logging
-
-When logging is enabled, rejected uploads are logged with:
-
-- MIME type detected
-- Filename
-- Container handle
-- User ID
-
-Example log entry:
-
-```
-[2025-01-28 10:30:00] local.INFO: [MIME Guard] Upload rejected {
-    "mime_type": "application/zip",
-    "filename": "archive.zip",
-    "container": "assets",
-    "user_id": 1
-}
-```
-
-## Permissions
-
-Access to the MIME Guard settings page requires the `configure mime-guard` permission. Assign this permission to roles that should manage upload restrictions.
-
-## Common MIME Types Reference
-
-### Images
-| MIME Type | Format |
-|-----------|--------|
-| `image/jpeg` | JPEG |
-| `image/png` | PNG |
-| `image/gif` | GIF |
-| `image/webp` | WebP |
-| `image/svg+xml` | SVG |
-
-### Documents
-| MIME Type | Format |
-|-----------|--------|
-| `application/pdf` | PDF |
-| `application/msword` | Word (DOC) |
-| `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | Word (DOCX) |
-
-### Archives
-| MIME Type | Format |
-|-----------|--------|
-| `application/zip` | ZIP |
-| `application/x-rar-compressed` | RAR |
-| `application/x-7z-compressed` | 7Z |
-| `application/octet-stream` | Binary (generic) |
-
-### 3D Models
-| MIME Type | Format |
-|-----------|--------|
-| `model/stl` | STL |
-| `application/sla` | STL (alt) |
-| `model/gltf+json` | GLTF |
-| `model/gltf-binary` | GLB |
-
-### Videos
-| MIME Type | Format |
-|-----------|--------|
-| `video/mp4` | MP4 |
-| `video/webm` | WebM |
-| `video/quicktime` | MOV |
-
-## Troubleshooting
-
-### Files are blocked but shouldn't be
-
-1. Check the detected MIME type in the logs
-2. Some files (like STL) are detected as `application/octet-stream`
-3. Add the correct MIME type to your allow rules
-
-### Container rules not working
-
-Ensure the container handle in your config matches exactly (check for underscores vs dashes).
-
-### Changes not taking effect
-
-Clear your config cache:
+## Commands
 
 ```bash
-php artisan config:clear
+composer test              # Run 100 tests (unit + feature + security)
+composer lint              # Fix code style
+composer lint-check        # Check code style
 ```
 
-## Contributing
+## Requirements
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+| Dependency | Version |
+|------------|---------|
+| Statamic | 6.x |
+| PHP | 8.2+ |
+| Laravel | 11.x / 12.x |
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT -- see [LICENSE](LICENSE) for details.
 
-## Credits
-
-- [Clément Arzoumanian](https://github.com/arz-cle)
-- Built for [Statamic](https://statamic.com)
+Built by [Clement Arzoumanian](https://arzoumanian.fr) for [Statamic](https://statamic.com).
