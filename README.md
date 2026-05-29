@@ -106,24 +106,6 @@ A type allowed at a more specific level overrides a global block. A type denied 
 | `document/*` | PDF, Word, Excel, PowerPoint, TXT, RTF |
 | `archive/*` | ZIP, RAR, 7Z, TAR, GZIP |
 
-## Screenshots
-
-> Screenshots coming soon.
-
-<!--
-![Global restrictions](screenshots/global.png)
-![Container rules](screenshots/containers.png)
-![Blueprint rules](screenshots/blueprints.png)
--->
-
-## Commands
-
-```bash
-composer test              # Run 100 tests (unit + feature + security)
-composer lint              # Fix code style
-composer lint-check        # Check code style
-```
-
 ## Requirements
 
 | Dependency | Version |
