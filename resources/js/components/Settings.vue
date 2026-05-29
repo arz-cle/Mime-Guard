@@ -227,9 +227,9 @@ if (typeof window !== 'undefined') initTabFromHash();
         <header class="flex flex-wrap items-center justify-between gap-4 px-2 sm:px-0 py-6 max-md:pb-8 md:py-8">
             <h1 class="text-[25px] leading-[1.25] st-text-legibility font-medium antialiased flex items-center gap-2.5 md:flex-1">
                 <div class="size-5 relative">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 text-gray-500">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="M9 12l2 2 4-4"/>
+                    <svg width="15" height="14" viewBox="0 0 15 14" fill="none" xmlns="http://www.w3.org/2000/svg" class="size-5 text-gray-500">
+                        <path d="M7.3125 0.5C7.39718 0.50007 7.65111 0.528226 8.05566 0.585938C8.4434 0.641254 8.93192 0.718364 9.45703 0.804688C10.507 0.977299 11.6937 1.18523 12.4912 1.32715C12.9748 1.41321 13.2499 1.65377 13.3154 1.97754C13.4183 2.4859 13.5189 3.32682 13.5332 4.68359C13.5651 7.70397 12.409 9.98812 10.1719 11.7529C9.43998 12.3282 8.63196 12.8088 7.76953 13.1826C7.29937 13.3864 6.76569 13.387 6.2959 13.1836C5.45002 12.8173 4.65663 12.3473 3.93652 11.7852C1.6459 9.99647 0.270657 7.68715 0.53125 4.72168C0.650541 3.36436 0.809595 2.51983 0.945312 2.00684C1.03694 1.66127 1.34267 1.41605 1.83496 1.33301C2.67117 1.19195 3.93038 0.982908 5.04395 0.808594C5.60098 0.721398 6.11938 0.643002 6.5293 0.586914C6.95666 0.528443 7.22581 0.5 7.3125 0.5Z" stroke="currentColor"/>
+                        <path d="M4.74466 6.1694C5.09682 6.75949 6.0215 7.97763 6.90295 8.12945C8.00476 8.31923 10.0555 3.99997 10.0555 3.99997" stroke="currentColor" stroke-linecap="round"/>
                     </svg>
                 </div>
                 {{ title }}
@@ -329,10 +329,7 @@ if (typeof window !== 'undefined') initTabFromHash();
                                 <div class="flex items-center gap-2">
                                     <ui-heading :text="container.title" />
                                     <span class="text-xs text-gray-400 dark:text-gray-500">{{ container.handle }}</span>
-                                    <span v-if="hasContainerRules(container.handle)"
-                                          class="text-[10px] bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full font-medium">
-                                        {{ trans.configured }}
-                                    </span>
+                                    <ui-badge v-if="hasContainerRules(container.handle)" pill color="emerald" :text="trans.configured" />
                                 </div>
                             </ui-panel-header>
                             <ui-card>
@@ -385,10 +382,7 @@ if (typeof window !== 'undefined') initTabFromHash();
                                 <div class="flex items-center gap-2">
                                     <ui-heading :text="blueprint.title" />
                                     <span class="text-xs text-gray-400 dark:text-gray-500">{{ blueprint.collection }}</span>
-                                    <span v-if="hasBlueprintRules(blueprint.handle)"
-                                          class="text-[10px] bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full font-medium">
-                                        {{ trans.configured }}
-                                    </span>
+                                    <ui-badge v-if="hasBlueprintRules(blueprint.handle)" pill color="emerald" :text="trans.configured" />
                                 </div>
                             </ui-panel-header>
                             <ui-card>
