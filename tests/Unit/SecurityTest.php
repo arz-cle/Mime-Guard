@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use Arzou\MimeGuard\Listeners\AssetSavingListener;
 use Arzou\MimeGuard\MimeGuard;
 use Arzou\MimeGuard\Rules\MimeValidator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 // ============================================================
 // Magic bytes detection (not extension-based)
@@ -60,7 +63,7 @@ describe('MIME detection uses magic bytes, not file extensions', function () {
         $validator = new MimeValidator;
 
         expect(fn () => $validator->getMimeTypeFromContent('/nonexistent/path.jpg'))
-            ->toThrow(\InvalidArgumentException::class);
+            ->toThrow(InvalidArgumentException::class);
     });
 });
 
@@ -226,15 +229,15 @@ describe('Default config blocks dangerous types', function () {
 
 describe('Upload rejection', function () {
     it('rejectUpload throws HttpResponseException with 422', function () {
-        $listener = new \Arzou\MimeGuard\Listeners\AssetSavingListener;
+        $listener = new AssetSavingListener;
 
-        $reflection = new \ReflectionMethod($listener, 'rejectUpload');
+        $reflection = new ReflectionMethod($listener, 'rejectUpload');
         $reflection->setAccessible(true);
 
         try {
             $reflection->invoke($listener, 'application/zip');
             $this->fail('Expected HttpResponseException');
-        } catch (\Illuminate\Http\Exceptions\HttpResponseException $e) {
+        } catch (HttpResponseException $e) {
             $response = $e->getResponse();
             expect($response->getStatusCode())->toBe(422);
 
@@ -259,12 +262,12 @@ describe('Rejection logging', function () {
         Config::set('mime-guard.logging.enabled', true);
         Config::set('mime-guard.logging.channel', 'stack');
 
-        \Illuminate\Support\Facades\Log::shouldReceive('channel')
+        Log::shouldReceive('channel')
             ->with('stack')
             ->once()
             ->andReturnSelf();
 
-        \Illuminate\Support\Facades\Log::shouldReceive('info')
+        Log::shouldReceive('info')
             ->once()
             ->withArgs(function ($message, $context) {
                 return str_contains($message, 'MIME Guard')
@@ -272,9 +275,9 @@ describe('Rejection logging', function () {
                     && $context['filename'] === 'test.zip';
             });
 
-        $listener = new \Arzou\MimeGuard\Listeners\AssetSavingListener;
+        $listener = new AssetSavingListener;
 
-        $reflection = new \ReflectionMethod($listener, 'logRejection');
+        $reflection = new ReflectionMethod($listener, 'logRejection');
         $reflection->setAccessible(true);
         $reflection->invoke($listener, 'application/zip', 'test.zip', ['container' => 'uploads']);
     });
@@ -282,11 +285,11 @@ describe('Rejection logging', function () {
     it('does not log when logging is disabled', function () {
         Config::set('mime-guard.logging.enabled', false);
 
-        \Illuminate\Support\Facades\Log::shouldReceive('channel')->never();
+        Log::shouldReceive('channel')->never();
 
-        $listener = new \Arzou\MimeGuard\Listeners\AssetSavingListener;
+        $listener = new AssetSavingListener;
 
-        $reflection = new \ReflectionMethod($listener, 'logRejection');
+        $reflection = new ReflectionMethod($listener, 'logRejection');
         $reflection->setAccessible(true);
         $reflection->invoke($listener, 'application/zip', 'test.zip', ['container' => 'uploads']);
     });
