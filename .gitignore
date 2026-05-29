@@ -3,6 +3,7 @@
 .phpunit.cache/
 .php-cs-fixer.cache
 composer.lock
+package-lock.json
 .DS_Store
 *.log
 .env
